@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cita Confirmada - Rossy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/confirmacion.css}" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light no-print">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cut"></i> Rossy
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card confirmation-card">
+                    <div class="card-header text-center bg-success text-white">
+                        <h3><i class="fas fa-check-circle"></i> ¡Cita Confirmada!</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h4>Su código único de cita es:</h4>
+                            <div class="codigo-unico" id="codigoCita" th:text="${cita.codigoUnico}"></div>
+                            <p class="text-danger mt-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>¡IMPORTANTE!</strong> Guarde este código. Lo necesitará para verificar su cita.
+                            </p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-user"></i> Datos del Cliente</h5>
+                                <ul class="list-unstyled">
+                                    <li><strong>Nombre:</strong> <span id="clienteNombre" th:text="${cita.cliente.nombreCompleto}"></span></li>
+                                    <li><strong>Teléfono:</strong> <span id="clienteTelefono" th:text="${cita.cliente.telefono}"></span></li>
+                                    <li><strong>Email:</strong> <span id="clienteEmail" th:text="${cita.cliente.email}"></span></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-calendar-check"></i> Detalles de la Cita</h5>
+                                <ul class="list-unstyled">
+                                    <li><strong>Servicio:</strong> <span id="servicio" th:text="${cita.servicio.nombre}"></span></li>
+                                    <li><strong>Peluquero:</strong> <span id="peluquero" th:text="${cita.peluquero.nombreCompleto}"></span></li>
+                                    <li><strong>Fecha:</strong> <span id="fecha" th:text="${#temporals.format(cita.fechaHora, 'dd/MM/yyyy')}"></span></li>
+                                    <li><strong>Hora:</strong> <span id="hora" th:text="${#temporals.format(cita.fechaHora, 'HH:mm')}"></span></li>
+                                    <li><strong>Duración:</strong> <span id="duracion" th:text="${cita.servicio.duracionMinutos} + ' minutos'"></span></li>
+                                    <li><strong>Precio:</strong> <span id="precio" th:text="'S/. ' + ${cita.servicio.precio}"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-4">
+                            <h6><i class="fas fa-info-circle"></i> Información Importante:</h6>
+                            <ul class="mb-0">
+                                <li>Llegue 10 minutos antes de su cita</li>
+                                <li>Traiga su código único para verificar la cita</li>
+                                <li>En caso de cancelación, contacte con anticipación</li>
+                                <li>El pago se realiza al finalizar el servicio</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="print-only text-center mt-4">
+                            <h4>Barbería Elite</h4>
+                            <p>Comprobante de Cita</p>
+                            <p>Fecha de impresión: <span th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy HH:mm')}"></span></p>
+                        </div>
+                        
+                        <div class="text-center no-print print-button">
+                            <button onclick="descargarComprobante()" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-print"></i> Imprimir Comprobante
+                            </button>
+                            <a href="/" class="btn btn-success">
+                                <i class="fas fa-home"></i> Volver al Inicio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+async function descargarComprobante() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const getText = id => document.getElementById(id)?.innerText.trim() || '';
+
+    const codigo = getText('codigoCita');
+    const nombre = getText('clienteNombre');
+    const telefono = getText('clienteTelefono');
+    const email = getText('clienteEmail');
+    const servicio = getText('servicio');
+    const peluquero = getText('peluquero');
+    const fecha = getText('fecha');
+    const hora = getText('hora');
+    const duracion = getText('duracion');
+    const precio = getText('precio');
+    const fechaDescarga = new Date().toLocaleString('es-PE');
+
+    // URL PNG (mejor que SVG para jsPDF)
+    const logoUrl = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png';
+
+    // Cargar imagen PNG como base64 para jsPDF
+    const getBase64ImageFromURL = url => new Promise((resolve, reject) => {
+        var img = new Image();
+        img.setAttribute('crossOrigin', 'anonymous');
+        img.onload = () => {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            var dataURL = canvas.toDataURL('image/png');
+            resolve(dataURL);
+        };
+        img.onerror = error => reject(error);
+        img.src = url;
+    });
+
+    const logoBase64 = await getBase64ImageFromURL(logoUrl);
+
+    // Dibujar el logo
+    doc.addImage(logoBase64, 'PNG', 15, 10, 20, 20);
+
+    doc.setFontSize(18);
+    doc.setFont("Helvetica", "bold");
+    doc.text("ROSSY", 40, 20);
+
+    // Línea separadora
+    doc.setLineWidth(0.5);
+    doc.line(15, 25, 195, 25);
+
+    // Título
+    doc.setFontSize(14);
+    doc.text("Comprobante de Cita", 15, 35);
+
+    doc.setFontSize(11);
+    doc.setTextColor(80);
+
+    // Información de la cita
+    let y = 45;
+
+    doc.setFont("Helvetica", "bold");
+    doc.text("Código de Cita:", 15, y);
+    doc.setFont("Helvetica", "normal");
+    doc.text(codigo, 60, y);
+
+    y += 10;
+    doc.setFont("Helvetica", "bold");
+    doc.text("Fecha de descarga:", 15, y);
+    doc.setFont("Helvetica", "normal");
+    doc.text(fechaDescarga, 60, y);
+
+    // Sección cliente
+    y += 15;
+    doc.setFont("Helvetica", "bold");
+    doc.text("Datos del Cliente", 15, y);
+
+    y += 8;
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Nombre: ${nombre}`, 20, y);
+    y += 7;
+    doc.text(`Teléfono: ${telefono}`, 20, y);
+    y += 7;
+    doc.text(`Email: ${email}`, 20, y);
+
+    // Sección cita
+    y += 12;
+    doc.setFont("Helvetica", "bold");
+    doc.text("Detalles de la Cita", 15, y);
+
+    y += 8;
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Servicio: ${servicio}`, 20, y);
+    y += 7;
+    doc.text(`Peluquero: ${peluquero}`, 20, y);
+    y += 7;
+    doc.text(`Fecha: ${fecha}`, 20, y);
+    y += 7;
+    doc.text(`Hora: ${hora}`, 20, y);
+    y += 7;
+    doc.text(`Duración: ${duracion}`, 20, y);
+    y += 7;
+    doc.text(`Precio: ${precio}`, 20, y);
+
+    // Notas importantes
+    y += 15;
+    doc.setFont("Helvetica", "bold");
+    doc.text("Notas importantes:", 15, y);
+    y += 8;
+    doc.setFont("Helvetica", "normal");
+    const notas = [
+        "- Llegue 10 minutos antes de su cita.",
+        "- Traiga su código único para verificar.",
+        "- En caso de cancelación, avise con anticipación.",
+        "- El pago se realiza al finalizar el servicio."
+    ];
+    notas.forEach(nota => {
+        doc.text(nota, 20, y);
+        y += 6;
+    });
+
+    // Guardar el PDF
+    doc.save(`Comprobante_Cita_${codigo || 'cliente'}.pdf`);
+}
+</script>
+
+
+
+
+</body>
+</html>

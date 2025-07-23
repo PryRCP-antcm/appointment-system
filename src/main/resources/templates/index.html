@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rossy - Inicio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
+</head>
+
+<body>
+    <div th:replace="fragments :: navbar"></div>
+
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-cut"></i> Rossy
+            </h1>
+            <p class="lead mb-5">El mejor servicio de peluquería con profesionales expertos</p>
+            <a href="/agendar" class="btn btn-light btn-lg">
+                <i class="fas fa-calendar-plus"></i> Agendar Cita
+            </a>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row text-center mb-5">
+                <div class="col">
+                    <h2>¿Por qué elegirnos?</h2>
+                    <p class="text-muted">
+                        Con 16 años de experiencia, somos un referente en estilismo y barbería, ofreciendo
+                        excelencia y un ambiente acogedor. Más que cortes y peinados, brindamos una experiencia
+                        integral de bienestar y satisfacción. Gracias a la confianza de nuestros clientes, hemos
+                        crecido y evolucionado. ¡Visítanos y descubre por qué somos el lugar
+                    </p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Profesionales Expertos</h5>
+                            <p class="card-text">
+                                Nuestro equipo cuenta con años de experiencia y capacitación continua.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Horarios Flexibles</h5>
+                            <p class="card-text">Agenda tu cita en el horario que mejor se adapte a tu rutina.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100 text-center p-4">
+                        <div class="card-body">
+                            <i class="fas fa-star fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Calidad Garantizada</h5>
+                            <p class="card-text">
+                                Utilizamos productos de primera calidad para resultados excepcionales.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nueva sección con galería de imágenes -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Nuestros trabajos</h2>
+            <div class="row g-3 justify-content-center">
+                <div class="col-6 col-sm-4 col-md-3">
+                    <img src="/css/images/corte.jpg" alt="Corte de cabello 1" class="img-fluid rounded shadow-sm" />
+                </div>
+                <div class="col-6 col-sm-4 col-md-3">
+                    <img src="/css/images/corte2.jpg" alt="Corte de cabello 2" class="img-fluid rounded shadow-sm" />
+                </div>
+                <div class="col-6 col-sm-4 col-md-3">
+                    <img src="/css/images/peinado.jpg" alt="Corte de cabello 3" class="img-fluid rounded shadow-sm" />
+                </div>
+                <div class="col-6 col-sm-4 col-md-3">
+                    <img src="/css/images/peinado1.jpeg" alt="Corte de cabello 4" class="img-fluid rounded shadow-sm" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-light py-5">
+        <div class="container text-center">
+            <h3 class="mb-4">¿Listo para tu nueva imagen?</h3>
+            <a href="/agendar" class="btn btn-primary btn-lg">
+                <i class="fas fa-calendar-plus"></i> Agendar Cita Ahora
+            </a>
+        </div>
+    </section>
+
+    <div th:replace="fragments :: footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

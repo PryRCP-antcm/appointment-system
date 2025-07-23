@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Fecha y Hora - Rossy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/fecha-hora-form.css}">
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cut"></i> Rossy
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="step-indicator">
+                    <div class="step completed">1</div>
+                    <div class="step completed">2</div>
+                    <div class="step completed">3</div>
+                    <div class="step active">4</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4><i class="fas fa-calendar-alt"></i> Paso 4: Seleccionar Fecha y Hora</h4>
+                        <div class="row mt-2">
+                            <div class="col-md-6">
+                                <small class="text-muted">Servicio: <strong th:text="${servicioSeleccionado.nombre}"></strong></small>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Peluquero: <strong th:text="${peluqueroSeleccionado.nombreCompleto}"></strong></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="fechaHoraForm" th:action="@{/agendar/confirmar}" method="post">
+                            <input type="hidden" id="fechaInput" name="fecha">
+                            <input type="hidden" id="horaInput" name="hora">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fecha" class="form-label">Seleccionar Fecha</label>
+                                    <input type="date" class="form-control" id="fecha" required>
+                                    <small class="form-text text-muted">Seleccione una fecha para ver los horarios disponibles</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Horarios Disponibles</label>
+                                    <div id="horariosContainer" class="border rounded p-3">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-calendar-day fa-2x mb-2"></i>
+                                            <p>Seleccione una fecha para ver los horarios disponibles</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                                <button type="button" class="btn btn-secondary" onclick="history.back()">
+                                    <i class="fas fa-arrow-left"></i> Anterior
+                                </button>
+                                <button type="submit" id="btnConfirmar" class="btn btn-success" disabled>
+                                    <i class="fas fa-check"></i> Confirmar Cita
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const fechaInput = document.getElementById('fecha');
+            const horariosContainer = document.getElementById('horariosContainer');
+            const fechaHiddenInput = document.getElementById('fechaInput');
+            const horaHiddenInput = document.getElementById('horaInput');
+            const btnConfirmar = document.getElementById('btnConfirmar');
+            
+            const peluqueroId = /*[[${peluqueroSeleccionado.id}]]*/ 0;
+            const servicioId = /*[[${servicioSeleccionado.id}]]*/ 0;
+            
+            // Establecer fecha mínima (hoy)
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            fechaInput.min = tomorrow.toISOString().split('T')[0];
+            
+            // Establecer fecha máxima (30 días desde hoy)
+            const maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + 30);
+            fechaInput.max = maxDate.toISOString().split('T')[0];
+            
+            fechaInput.addEventListener('change', function() {
+                const fechaSeleccionada = this.value;
+                if (fechaSeleccionada) {
+                    cargarHorarios(fechaSeleccionada);
+                }
+            });
+            
+            function cargarHorarios(fecha) {
+                horariosContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Cargando horarios...</p></div>';
+                
+                fetch(`/api/horarios-disponibles?peluqueroId=${peluqueroId}&fecha=${fecha}&servicioId=${servicioId}`)
+                    .then(response => response.json())
+                    .then(horarios => {
+                        mostrarHorarios(horarios);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        horariosContainer.innerHTML = '<div class="text-center text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Error al cargar horarios</p></div>';
+                    });
+            }
+            
+            function mostrarHorarios(horarios) {
+                if (horarios.length === 0) {
+                    horariosContainer.innerHTML = '<div class="text-center text-muted"><i class="fas fa-calendar-times fa-2x mb-2"></i><p>No hay horarios disponibles para esta fecha</p></div>';
+                    return;
+                }
+                
+                let html = '<div class="row">';
+                horarios.forEach(horario => {
+                    html += `
+                        <div class="col-6 col-md-4 mb-2">
+                            <div class="btn btn-outline-primary time-slot w-100" data-hora="${horario}">
+                                ${formatearHora(horario)}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                horariosContainer.innerHTML = html;
+                
+                // Agregar event listeners a los horarios
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    slot.addEventListener('click', function() {
+                        // Remover selección anterior
+                        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                        
+                        // Seleccionar actual
+                        this.classList.add('selected');
+                        
+                        // Establecer valores
+                        fechaHiddenInput.value = fechaInput.value;
+                        horaHiddenInput.value = this.getAttribute('data-hora');
+                        
+                        // Habilitar botón
+                        btnConfirmar.disabled = false;
+                    });
+                });
+            }
+            
+            function formatearHora(hora) {
+                const [hours, minutes] = hora.split(':');
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const hour12 = hour % 12 || 12;
+                return `${hour12}:${minutes} ${ampm}`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Historial de Citas - Panel Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" th:href="@{/css/admin-peluqueros.css}" />
+    <style>
+  .table-responsive {
+    max-height: 392px; /* altura aproximada para 7 filas */
+    overflow-y: auto;
+    display: block;
+  }
+</style>
+
+</head>
+
+<body>
+    <header class="admin-header text-white py-3 mb-4 bg-dark">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-calendar-alt"></i> Historial de Citas</h2>
+        </div>
+        <div class="d-flex justify-content-center mb-4">
+            <button id="btnDescargarPDF" class="btn btn-info">
+                <i class="fas fa-file-pdf"></i> Descargar Reporte en PDF
+            </button>
+        </div>
+
+    </header>
+
+    <div class="container">
+
+        <!-- Filtros de búsqueda -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text" id="buscadorCliente" class="form-control" placeholder="Buscar por cliente..." />
+            </div>
+            <div class="col-md-4">
+                <input type="date" id="buscadorFecha" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <select id="buscadorEstado" class="form-select">
+                    <option value="">-- Filtrar por estado --</option>
+                    <option value="PROGRAMADA">Programada</option>
+                    <option value="COMPLETADA">Completada</option>
+                    <option value="CANCELADA">Cancelada</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Mensajes flash -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Métricas -->
+        <div id="metricas" class="mb-4 text-white row g-3 justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="card bg-primary text-center">
+                    <div class="card-body py-2">
+                        <i class="fas fa-list-ul fa-2x mb-1"></i>
+                        <h5 class="card-title mb-0" id="totalCitas">Total: 0</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-warning text-dark text-center">
+                    <div class="card-body py-2">
+                        <i class="fas fa-clock fa-2x mb-1"></i>
+                        <h5 class="card-title mb-0" id="programadas">Programadas: 0</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-success text-center">
+                    <div class="card-body py-2">
+                        <i class="fas fa-check-circle fa-2x mb-1"></i>
+                        <h5 class="card-title mb-0" id="completadas">Completadas: 0</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card bg-danger text-center">
+                    <div class="card-body py-2">
+                        <i class="fas fa-times-circle fa-2x mb-1"></i>
+                        <h5 class="card-title mb-0" id="canceladas">Canceladas: 0</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="table-responsive shadow-sm">
+            <table class="table table-striped table-hover align-middle" id="tablaCitas">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Peluquero</th>
+                        <th>Servicio</th>
+                        <th>Fecha y Hora</th>
+                        <th>Código</th>
+                        <th>Estado</th> <!-- Nueva columna -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="cita : ${citas}">
+                        <td th:text="${cita.cliente.nombreCompleto}"></td>
+                        <td th:text="${cita.peluquero.nombre}"></td>
+                        <td th:text="${cita.servicio.nombre}"></td>
+                        <td th:text="${#temporals.format(cita.fechaHora, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${cita.codigoUnico}"></td>
+
+                        <td>
+                            <form th:action="@{/admin/citas/actualizarEstado}" method="post"
+                                class="d-flex align-items-center">
+                                <input type="hidden" name="id" th:value="${cita.id}" />
+                                <select name="estado" class="form-select form-select-sm me-2" required>
+                                    <option value="PROGRAMADA" th:selected="${cita.estado.name() == 'PROGRAMADA'}">
+                                        Programada</option>
+                                    <option value="COMPLETADA" th:selected="${cita.estado.name() == 'COMPLETADA'}">
+                                        Completada</option>
+                                    <option value="CANCELADA" th:selected="${cita.estado.name() == 'CANCELADA'}">
+                                        Cancelada</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(citas)}">
+                        <td colspan="6" class="text-center text-muted">No hay citas registradas</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <a href="/admin/dashboard" class="btn btn-secondary mt-3">
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buscadorCliente = document.getElementById('buscadorCliente');
+            const buscadorFecha = document.getElementById('buscadorFecha');
+            const buscadorEstado = document.getElementById('buscadorEstado');
+            const filas = document.querySelectorAll('#tablaCitas tbody tr');
+
+            function filtrar() {
+                const textoCliente = buscadorCliente.value.toLowerCase();
+                const textoFecha = buscadorFecha.value;
+                const estadoSeleccionado = buscadorEstado.value;
+
+                let totalVisible = 0;
+                let countProgramada = 0;
+                let countCompletada = 0;
+                let countCancelada = 0;
+
+                filas.forEach(fila => {
+                    // Evitar filtrar fila de "No hay citas registradas"
+                    if (fila.querySelector('td[colspan]')) {
+                        fila.style.display = '';
+                        return;
+                    }
+
+                    const tdCliente = fila.children[0]?.textContent.toLowerCase();
+                    const tdFecha = fila.children[3]?.textContent.split(' ')[0]; // YYYY-MM-DD
+
+                    // Obtener valor del select dentro de la celda Estado
+                    const tdEstadoSelect = fila.querySelector('td:nth-child(6) select');
+                    const tdEstado = tdEstadoSelect ? tdEstadoSelect.value.trim() : '';
+
+                    const coincideCliente = tdCliente.includes(textoCliente);
+                    const coincideFecha = !textoFecha || tdFecha === textoFecha;
+                    const coincideEstado = !estadoSeleccionado || tdEstado === estadoSeleccionado;
+
+                    if (coincideCliente && coincideFecha && coincideEstado) {
+                        fila.style.display = '';
+                        totalVisible++;
+                        // Contar estados visibles
+                        if (tdEstado === 'PROGRAMADA') countProgramada++;
+                        else if (tdEstado === 'COMPLETADA') countCompletada++;
+                        else if (tdEstado === 'CANCELADA') countCancelada++;
+                    } else {
+                        fila.style.display = 'none';
+                    }
+                });
+
+                // Mostrar métricas en el DOM
+                document.getElementById('totalCitas').textContent = `Total citas: ${totalVisible}`;
+                document.getElementById('programadas').textContent = `Programadas: ${countProgramada}`;
+                document.getElementById('completadas').textContent = `Completadas: ${countCompletada}`;
+                document.getElementById('canceladas').textContent = `Canceladas: ${countCancelada}`;
+            }
+
+            buscadorCliente.addEventListener('input', filtrar);
+            buscadorFecha.addEventListener('input', filtrar);
+            buscadorEstado.addEventListener('change', filtrar);
+
+            // Ejecutar filtro al cargar la página para mostrar métricas iniciales
+            filtrar();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- jsPDF AutoTable plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        document.getElementById('btnDescargarPDF').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF("p", "pt", "a4");
+
+            const total = document.getElementById('totalCitas').textContent;
+            const programadas = document.getElementById('programadas').textContent;
+            const completadas = document.getElementById('completadas').textContent;
+            const canceladas = document.getElementById('canceladas').textContent;
+
+            let y = 40;
+
+            // Título
+            doc.setFontSize(20);
+            doc.setTextColor(40, 40, 40);
+            doc.text("Reporte de Historial de Citas", 40, y);
+            y += 30;
+
+            // Métricas
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.setFillColor(230, 230, 230);
+            doc.roundedRect(40, y, 500, 80, 5, 5, 'F');
+            doc.text(total, 50, y + 25);
+            doc.text(programadas, 50, y + 45);
+            doc.text(completadas, 250, y + 25);
+            doc.text(canceladas, 250, y + 45);
+            y += 100;
+
+            // Extraer datos de la tabla
+            const rows = [];
+            const headers = ["Cliente", "Peluquero", "Servicio", "Fecha y Hora", "Código", "Estado"];
+            const tableRows = document.querySelectorAll("#tablaCitas tbody tr");
+
+            tableRows.forEach(row => {
+                // Ignorar la fila de "no hay citas"
+                if (row.querySelector("td[colspan]")) return;
+
+                // Solo filas visibles
+                if (row.style.display === 'none') return;
+
+                const cells = row.querySelectorAll("td");
+                const cliente = cells[0]?.textContent.trim();
+                const peluquero = cells[1]?.textContent.trim();
+                const servicio = cells[2]?.textContent.trim();
+                const fechaHora = cells[3]?.textContent.trim();
+                const codigo = cells[4]?.textContent.trim();
+                const estado = cells[5]?.querySelector('select')?.value || "";
+
+                rows.push([cliente, peluquero, servicio, fechaHora, codigo, estado]);
+            });
+
+
+            // Agregar tabla
+            doc.autoTable({
+                startY: y,
+                head: [headers],
+                body: rows,
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 5
+                },
+                headStyles: {
+                    fillColor: [40, 40, 40]
+                },
+                margin: { top: 10, left: 40, right: 40 }
+            });
+
+            doc.save("reporte_historial_citas.pdf");
+        });
+    </script>
+
+</body>
+
+</html>

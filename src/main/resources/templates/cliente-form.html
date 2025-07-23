@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos Personales - Rossy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/cliente-form.css}">
+    <style>
+        .text-danger.small-message {
+            display: none;
+        }
+
+        .form-control:invalid:focus {
+            border-color: #dc3545;
+        }
+
+        .form-control:valid {
+            border-color: #198754;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-cut"></i> Rossy</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="step-indicator mb-3">
+                    <div class="step active">1</div>
+                    <div class="step">2</div>
+                    <div class="step">3</div>
+                    <div class="step">4</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4><i class="fas fa-user"></i> Paso 1: Datos Personales</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="clienteForm" th:action="@{/agendar/cliente}" method="post" th:object="${cliente}" novalidate>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nombre" class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+                                    <div class="text-danger small-message" id="error-nombre">Completa este campo</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="apellido" class="form-label">Apellido *</label>
+                                    <input type="text" class="form-control" id="apellido" th:field="*{apellido}" required>
+                                    <div class="text-danger small-message" id="error-apellido">Completa este campo</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono *</label>
+                                <input type="tel" class="form-control" id="telefono" th:field="*{telefono}" 
+                                       placeholder="123456789" pattern="[0-9]{9}" required>
+                                <div class="text-danger small-message" id="error-telefono">Ingrese 9 dígitos válidos</div>
+                                <small class="form-text text-muted">Ingrese 9 dígitos sin espacios ni guiones</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                                <div class="text-danger small-message" id="error-email">Ingrese un email válido</div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                                <a href="/" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="btnSiguiente" disabled>
+                                    Siguiente <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Validación con JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('clienteForm');
+            const btnSiguiente = document.getElementById('btnSiguiente');
+
+            const campos = [
+                { id: 'nombre', errorId: 'error-nombre' },
+                { id: 'apellido', errorId: 'error-apellido' },
+                { id: 'telefono', errorId: 'error-telefono', pattern: /^[0-9]{9}$/ },
+                { id: 'email', errorId: 'error-email', pattern: /^[^@\s]+@[^@\s]+\.[^@\s]+$/ }
+            ];
+
+            function validarCampo(input, errorEl, pattern = null) {
+                const valor = input.value.trim();
+                if (!valor || (pattern && !pattern.test(valor))) {
+                    errorEl.style.display = 'block';
+                    return false;
+                } else {
+                    errorEl.style.display = 'none';
+                    return true;
+                }
+            }
+
+            function validarFormulario() {
+                let valido = true;
+                campos.forEach(({ id, errorId, pattern }) => {
+                    const input = document.getElementById(id);
+                    const errorEl = document.getElementById(errorId);
+                    const campoValido = validarCampo(input, errorEl, pattern);
+                    if (!campoValido) valido = false;
+                });
+                btnSiguiente.disabled = !valido;
+            }
+
+            campos.forEach(({ id, errorId, pattern }) => {
+                const input = document.getElementById(id);
+                const errorEl = document.getElementById(errorId);
+
+                input.addEventListener('focus', () => {
+                    if (!input.value.trim()) {
+                        errorEl.style.display = 'block';
+                    }
+                });
+
+                input.addEventListener('input', () => {
+                    validarFormulario();
+                });
+
+                input.addEventListener('blur', () => {
+                    validarFormulario();
+                });
+            });
+
+            form.addEventListener('submit', (e) => {
+                if (btnSiguiente.disabled) {
+                    e.preventDefault(); // Previene envío si no está validado
+                }
+            });
+        });
+    </script>
+</body>
+</html>
