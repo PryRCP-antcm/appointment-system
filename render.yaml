@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: appointment-system
+    env: java
+    buildCommand: ./mvnw clean install
+    startCommand: java -jar target/appointment-system-0.0.1-SNAPSHOT.jar
+    region: oregon
+    plan: free
